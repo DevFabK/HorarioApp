@@ -388,3 +388,46 @@ h1 {
     font-size: 10px;
   }
 }
+
+.empty-day {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  min-height: 150px;
+  padding: 30px 0;
+}
+
+.empty-day-mark {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid #294965;
+
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+
+  color: #55728c;
+}
+
+.empty-day-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.empty-day-content strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+
+  color: #66809d;
+}
+
+.empty-day-content span {
+  font-size: 13px;
+  color: #435d74;
+}

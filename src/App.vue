@@ -1,37 +1,88 @@
 <script setup>
-const day = {
-  weekday: 'MIÉRCOLES',
-  date: '08',
-  month: 'OCTUBRE',
-  year: '2026'
-}
+import { computed, ref } from 'vue'
+import { schedule } from './data/schedule'
 
-const schedule = [
-  {
-    time: '06:00 — 14:00',
-    type: 'work',
-    label: 'TRABAJO',
-    title: 'Turno de mañana'
-  },
-  {
-    time: '16:00 — 18:00',
-    type: 'study',
-    label: 'IA & BIG DATA',
-    title: 'Tiempo de estudio'
-  },
-  {
-    time: '18:00 — 20:00',
-    type: 'renfe',
-    label: 'RENFE',
-    title: 'Tiempo de estudio'
-  }
+const currentDate = ref('2026-10-08')
+
+const dayNames = [
+  'DOMINGO',
+  'LUNES',
+  'MARTES',
+  'MIÉRCOLES',
+  'JUEVES',
+  'VIERNES',
+  'SÁBADO'
 ]
+
+const monthNames = [
+  'ENERO',
+  'FEBRERO',
+  'MARZO',
+  'ABRIL',
+  'MAYO',
+  'JUNIO',
+  'JULIO',
+  'AGOSTO',
+  'SEPTIEMBRE',
+  'OCTUBRE',
+  'NOVIEMBRE',
+  'DICIEMBRE'
+]
+
+const today = '2026-10-08'
+
+const currentDay = computed(() => {
+  const [year, month, day] = currentDate.value.split('-')
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day)
+  )
+
+  return {
+    weekday: dayNames[date.getDay()],
+    date: day,
+    month: monthNames[date.getMonth()],
+    year: year
+  }
+})
+
+const daySchedule = computed(() => {
+  return schedule[currentDate.value] || []
+})
+
+const dayNumber = computed(() => {
+  return currentDay.value.date
+})
+
+const isToday = computed(() => {
+  return currentDate.value === today
+})
+
+function changeDay(amount) {
+  const [year, month, day] = currentDate.value.split('-')
+
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day)
+  )
+
+  date.setDate(date.getDate() + amount)
+
+  const newYear = date.getFullYear()
+  const newMonth = String(date.getMonth() + 1).padStart(2, '0')
+  const newDay = String(date.getDate()).padStart(2, '0')
+
+  currentDate.value = `${newYear}-${newMonth}-${newDay}`
+}
 </script>
 
 <template>
   <main class="blueprint">
 
     <header class="topbar">
+
       <div class="brand">
         <span class="brand-mark">H</span>
         <span>HORARIO</span>
@@ -39,8 +90,9 @@ const schedule = [
 
       <div class="topbar-info">
         <span>DAY PLAN</span>
-        <span>2026 / 10 / 08</span>
+        <span>{{ currentDate.replaceAll('-', ' / ') }}</span>
       </div>
+
     </header>
 
     <section class="day-card">
@@ -48,43 +100,67 @@ const schedule = [
       <div class="day-header">
 
         <div>
-          <span class="eyebrow">TODAY</span>
 
-          <h1>{{ day.weekday }}</h1>
+          <span class="eyebrow">
+            {{ isToday ? 'TODAY' : 'DAY PLAN' }}
+          </span>
+
+          <h1>{{ currentDay.weekday }}</h1>
 
           <div class="date">
-            <span>{{ day.date }}</span>
-            <span>{{ day.month }}</span>
-            <span>{{ day.year }}</span>
+            <span>{{ currentDay.date }}</span>
+            <span>{{ currentDay.month }}</span>
+            <span>{{ currentDay.year }}</span>
           </div>
+
         </div>
 
         <div class="day-navigation">
-          <button>←</button>
 
-          <span>08 / 31</span>
+          <button
+            type="button"
+            aria-label="Día anterior"
+            @click="changeDay(-1)"
+          >
+            ←
+          </button>
 
-          <button>→</button>
+          <span>{{ currentDay.date }} / 31</span>
+
+          <button
+            type="button"
+            aria-label="Día siguiente"
+            @click="changeDay(1)"
+          >
+            →
+          </button>
+
         </div>
 
       </div>
 
       <div class="day-line">
+
         <span>DAILY SCHEDULE</span>
-        <span>03 BLOCKS</span>
+
+        <span>
+          {{ daySchedule.length.toString().padStart(2, '0') }}
+          BLOCKS
+        </span>
+
       </div>
 
       <section class="schedule">
 
         <article
-          v-for="(item, index) in schedule"
-          :key="index"
+          v-for="(item, index) in daySchedule"
+          :key="item.id"
           class="schedule-item"
           :class="`schedule-item--${item.type}`"
         >
 
           <div class="schedule-time">
-            {{ item.time }}
+            {{ item.start }} — {{ item.end }}
           </div>
 
           <div class="schedule-marker">
@@ -94,7 +170,13 @@ const schedule = [
           <div class="schedule-content">
 
             <div class="schedule-label">
-              {{ item.label }}
+              {{
+                item.type === 'work'
+                  ? 'TRABAJO'
+                  : item.type === 'study'
+                    ? 'IA & BIG DATA'
+                    : 'RENFE'
+              }}
             </div>
 
             <h2>{{ item.title }}</h2>
@@ -102,24 +184,41 @@ const schedule = [
           </div>
 
           <div class="schedule-index">
-            0{{ index + 1 }}
+            {{ (index + 1).toString().padStart(2, '0') }}
           </div>
 
         </article>
 
+        <div
+          v-if="daySchedule.length === 0"
+          class="empty-day"
+        >
+
+          <span class="empty-day-mark">+</span>
+
+          <div class="empty-day-content">
+            <strong>NO SCHEDULE</strong>
+            <span>Nothing planned for this day.</span>
+          </div>
+
+        </div>
+
       </section>
 
       <footer class="day-footer">
-        <span>HORARIOAPP / DAY 008</span>
+
+        <span>
+          HORARIOAPP / DAY {{ dayNumber }}
+        </span>
 
         <span>
           <strong>00%</strong>
           COMPLETE
         </span>
+
       </footer>
 
     </section>
 
   </main>
 </template>
-
