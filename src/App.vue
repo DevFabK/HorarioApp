@@ -33,6 +33,7 @@ const today = '2026-10-08'
 
 const currentDay = computed(() => {
   const [year, month, day] = currentDate.value.split('-')
+
   const date = new Date(
     Number(year),
     Number(month) - 1,
@@ -47,8 +48,15 @@ const currentDay = computed(() => {
   }
 })
 
+const currentDayData = computed(() => {
+  return schedule[currentDate.value] || {
+    status: 'free',
+    blocks: []
+  }
+})
+
 const daySchedule = computed(() => {
-  return schedule[currentDate.value] || []
+  return currentDayData.value.blocks
 })
 
 const dayNumber = computed(() => {
@@ -156,7 +164,7 @@ function changeDay(amount) {
           v-for="(item, index) in daySchedule"
           :key="item.id"
           class="schedule-item"
-          :class="`schedule-item--${item.type}`"
+          :class="`schedule-item--${item.category || item.type}`"
         >
 
           <div class="schedule-time">
@@ -171,11 +179,11 @@ function changeDay(amount) {
 
             <div class="schedule-label">
               {{
-                item.type === 'work'
-                  ? 'TRABAJO'
-                  : item.type === 'study'
-                    ? 'IA & BIG DATA'
-                    : 'RENFE'
+                item.category === 'ia'
+                  ? 'IA & BIG DATA'
+                  : item.category === 'renfe'
+                    ? 'RENFE'
+                    : 'TRABAJO'
               }}
             </div>
 
