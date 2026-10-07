@@ -486,14 +486,12 @@ function toggleBlock(blockId) {
             )?.completed
           }
         ]" :style="{
-          top: `${getTimelinePosition(item.timelineStart)}px`,
-          height: `${getBlockHeight(item)}px`
-        }" @click="toggleBlock(item.id)">
-
+    top: `${getTimelinePosition(item.timelineStart)}px`,
+    height: `${getBlockHeight(item)}px`
+  }" @click="toggleBlock(item.id)">
           <div class="timeline-block-line"></div>
 
           <div class="timeline-block-content">
-
             <span class="timeline-block-label">
               {{ getBlockLabel(item) }}
             </span>
@@ -503,13 +501,15 @@ function toggleBlock(blockId) {
             <span class="timeline-block-time">
               {{ item.start }} — {{ item.end }}
             </span>
-
           </div>
 
           <span class="timeline-block-index">
             {{ (index + 1).toString().padStart(2, '0') }}
           </span>
 
+          <div class="timeline-block-status">
+            {{currentDayData.blocks.find(block => block.id === item.id)?.completed ? '✓' : '○'}}
+          </div>
         </article>
 
       </section>
