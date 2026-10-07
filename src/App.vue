@@ -50,9 +50,22 @@ const monthNames = [
 const today = '2026-10-08'
 
 /**
- * Obtiene la información básica del día que estamos visualizando.
+ * Escala visual de la timeline.
  *
- * Devuelve el nombre del día, número, mes y año.
+ * 1 hora = 70 píxeles.
+ */
+const pixelsPerHour = 70
+
+/**
+ * Hora habitual de inicio del día.
+ *
+ * Los bloques de estudio que no tienen una hora
+ * concreta se intentarán colocar a partir de aquí.
+ */
+const defaultDayStart = 9 * 60
+
+/**
+ * Obtiene la información básica del día que estamos visualizando.
  */
 const currentDay = computed(() => {
   const [year, month, day] = currentDate.value.split('-')
@@ -85,24 +98,10 @@ const currentDayData = computed(() => {
 })
 
 /**
- * Obtiene los bloques planificados para el día seleccionado.
+ * Obtiene los bloques originales del día seleccionado.
  */
 const daySchedule = computed(() => {
   return currentDayData.value.blocks
-})
-
-/**
- * Obtiene el número del día que estamos visualizando.
- */
-const dayNumber = computed(() => {
-  return currentDay.value.date
-})
-
-/**
- * Comprueba si el día seleccionado coincide con el día actual.
- */
-const isToday = computed(() => {
-  return currentDate.value === today
 })
 
 /**
@@ -111,9 +110,6 @@ const isToday = computed(() => {
  * Por ejemplo:
  * 10:30 → 630 minutos.
  *
- * Esto nos permitirá realizar cálculos de tiempo
- * sin depender directamente del formato de la hora.
- *
  * @param {string} time - Hora en formato HH:MM.
  * @returns {number} Hora convertida a minutos.
  */
@@ -121,6 +117,19 @@ function timeToMinutes(time) {
   const [hours, minutes] = time.split(':').map(Number)
 
   return hours * 60 + minutes
+}
+
+/**
+ * Convierte una cantidad de minutos a una hora HH:MM.
+ *
+ * @param {number} minutes - Minutos desde medianoche.
+ * @returns {string} Hora en formato HH:MM.
+ */
+function minutesToTime(minutes) {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+
+  return `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}`
 }
 
 /**
@@ -170,6 +179,187 @@ function getBlockLabel(block) {
 
   return 'TRABAJO'
 }
+
+/**
+ * Construye los bloques de la timeline.
+ *
+ * Los bloques con una hora concreta se consideran fijos.
+ * Los bloques que solamente tienen duración se colocan
+ * automáticamente a partir de la hora habitual de inicio
+ * del día.
+ */
+const timelineBlocks = computed(() => {
+  const blocks = currentDayData.value.blocks
+
+  const fixedBlocks = blocks
+    .filter(block => block.start && block.end)
+    .map(block => ({
+      ...block,
+      timelineStart: timeToMinutes(block.start),
+      timelineEnd: timeToMinutes(block.end)
+    }))
+    .sort((a, b) => a.timelineStart - b.timelineStart)
+
+  const flexibleBlocks = blocks.filter(
+    block => !block.start && block.duration
+  )
+
+  /*
+   * Normalmente empezamos a las 09:00.
+   *
+   * Si existe un bloque fijo antes de esa hora,
+   * la timeline empezará antes para poder mostrarlo.
+   */
+  let currentTime = defaultDayStart
+
+  if (fixedBlocks.length > 0) {
+    const firstFixedBlock = fixedBlocks[0]
+
+    if (firstFixedBlock.timelineStart < currentTime) {
+      currentTime = firstFixedBlock.timelineStart
+    }
+  }
+
+  const placedBlocks = [...fixedBlocks]
+
+  for (const block of flexibleBlocks) {
+    let startTime = currentTime
+
+    /*
+     * Buscamos el primer hueco disponible para el bloque.
+     */
+    let foundPosition = false
+
+    while (!foundPosition) {
+      const endTime = startTime + block.duration
+
+      const conflictingBlock = fixedBlocks.find(
+        fixedBlock =>
+          startTime < fixedBlock.timelineEnd &&
+          endTime > fixedBlock.timelineStart
+      )
+
+      if (!conflictingBlock) {
+        foundPosition = true
+
+        placedBlocks.push({
+          ...block,
+          start: minutesToTime(startTime),
+          end: minutesToTime(endTime),
+          timelineStart: startTime,
+          timelineEnd: endTime
+        })
+
+        currentTime = endTime
+      } else {
+        startTime = conflictingBlock.timelineEnd
+        currentTime = startTime
+      }
+    }
+  }
+
+  return placedBlocks.sort(
+    (a, b) => a.timelineStart - b.timelineStart
+  )
+})
+
+/**
+ * Determina la hora desde la que empieza visualmente la timeline.
+ *
+ * Normalmente empieza a las 09:00.
+ * Si existe un bloque antes de esa hora, se adapta
+ * para poder mostrarlo.
+ */
+const timelineStart = computed(() => {
+  if (timelineBlocks.value.length === 0) {
+    return defaultDayStart
+  }
+
+  const firstBlock = Math.min(
+    ...timelineBlocks.value.map(block => block.timelineStart)
+  )
+
+  return Math.min(defaultDayStart, firstBlock)
+})
+
+/**
+ * Determina hasta qué hora debe llegar visualmente
+ * la timeline.
+ */
+const timelineEnd = computed(() => {
+  const minimumEnd = 23 * 60
+
+  if (timelineBlocks.value.length === 0) {
+    return minimumEnd
+  }
+
+  const latestBlock = Math.max(
+    ...timelineBlocks.value.map(block => block.timelineEnd)
+  )
+
+  return Math.max(
+    minimumEnd,
+    Math.ceil(latestBlock / 60) * 60
+  )
+})
+
+/**
+ * Genera las horas que aparecerán como referencias
+ * en el lateral de la timeline.
+ */
+const timelineHours = computed(() => {
+  const hours = []
+
+  for (
+    let minutes = timelineStart.value;
+    minutes <= timelineEnd.value;
+    minutes += 60
+  ) {
+    hours.push({
+      label: minutesToTime(minutes),
+      minutes
+    })
+  }
+
+  return hours
+})
+
+/**
+ * Devuelve la posición vertical de una hora.
+ *
+ * @param {number} minutes - Minutos desde medianoche.
+ * @returns {number} Posición en píxeles.
+ */
+function getTimelinePosition(minutes) {
+  return (
+    ((minutes - timelineStart.value) / 60) *
+    pixelsPerHour
+  )
+}
+
+/**
+ * Devuelve la altura visual de un bloque.
+ *
+ * @param {Object} block - Bloque de la timeline.
+ * @returns {number} Altura en píxeles.
+ */
+function getBlockHeight(block) {
+  return (getDuration(block) / 60) * pixelsPerHour
+}
+
+/**
+ * Obtiene el número del día que estamos visualizando.
+ */
+const dayNumber = computed(() => {
+  return currentDay.value.date
+})
+
+/**
+ * Comprueba si el día seleccionado coincide con el día actual.
+ */
+const isToday = computed(() => {
+  return currentDate.value === today
+})
 
 /**
  * Cambia el día que estamos visualizando.
@@ -235,21 +425,13 @@ function changeDay(amount) {
 
         <div class="day-navigation">
 
-          <button
-            type="button"
-            aria-label="Día anterior"
-            @click="changeDay(-1)"
-          >
+          <button type="button" aria-label="Día anterior" @click="changeDay(-1)">
             ←
           </button>
 
           <span>{{ currentDay.date }} / 31</span>
 
-          <button
-            type="button"
-            aria-label="Día siguiente"
-            @click="changeDay(1)"
-          >
+          <button type="button" aria-label="Día siguiente" @click="changeDay(1)">
             →
           </button>
 
@@ -262,66 +444,63 @@ function changeDay(amount) {
         <span>DAILY SCHEDULE</span>
 
         <span>
-          {{ daySchedule.length.toString().padStart(2, '0') }}
+          {{ timelineBlocks.length.toString().padStart(2, '0') }}
           BLOCKS
         </span>
 
       </div>
 
-      <section class="schedule">
+      <section v-if="timelineBlocks.length > 0" class="timeline" :style="{
+        '--timeline-height': `${getTimelinePosition(timelineEnd)}px`
+      }">
 
-        <article
-          v-for="(item, index) in daySchedule"
-          :key="item.id"
-          class="schedule-item"
-          :class="`schedule-item--${item.category || item.type}`"
-        >
+        <div v-for="hour in timelineHours" :key="hour.minutes" class="timeline-hour" :style="{
+          top: `${getTimelinePosition(hour.minutes)}px`
+        }">
+          <span>{{ hour.label }}</span>
+          <div></div>
+        </div>
 
-          <div class="schedule-time">
-            <template v-if="item.start && item.end">
-              {{ item.start }} — {{ item.end }}
-            </template>
+        <article v-for="(item, index) in timelineBlocks" :key="item.id" class="timeline-block"
+          :class="`timeline-block--${item.category || item.type}`" :style="{
+            top: `${getTimelinePosition(item.timelineStart)}px`,
+            height: `${getBlockHeight(item)}px`
+          }">
 
-            <template v-else>
-              {{ Math.floor(item.duration / 60) }}H
-            </template>
-          </div>
+          <div class="timeline-block-line"></div>
 
-          <div class="schedule-marker">
-            <span></span>
-          </div>
+          <div class="timeline-block-content">
 
-          <div class="schedule-content">
-
-            <div class="schedule-label">
+            <span class="timeline-block-label">
               {{ getBlockLabel(item) }}
-            </div>
+            </span>
 
             <h2>{{ item.title }}</h2>
 
+            <span class="timeline-block-time">
+              {{ item.start }} — {{ item.end }}
+            </span>
+
           </div>
 
-          <div class="schedule-index">
+          <span class="timeline-block-index">
             {{ (index + 1).toString().padStart(2, '0') }}
-          </div>
+          </span>
 
         </article>
 
-        <div
-          v-if="daySchedule.length === 0"
-          class="empty-day"
-        >
+      </section>
 
-          <span class="empty-day-mark">+</span>
+      <div v-else class="empty-day">
 
-          <div class="empty-day-content">
-            <strong>NO SCHEDULE</strong>
-            <span>Nothing planned for this day.</span>
-          </div>
+        <span class="empty-day-mark">+</span>
 
+        <div class="empty-day-content">
+          <strong>NO SCHEDULE</strong>
+          <span>Nothing planned for this day.</span>
         </div>
 
-      </section>
+      </div>
 
       <footer class="day-footer">
 

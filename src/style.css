@@ -223,111 +223,270 @@ h1 {
   color: #55728c;
 }
 
-.schedule {
-  padding: 12px 0 20px;
-}
+.timeline {
+  --time-width: clamp(52px, 12vw, 70px);
+  --time-gap: clamp(20px, 5vw, 45px);
+  --content-gap: clamp(14px, 3vw, 20px);
+  --line-width: 1px;
 
-.schedule-item {
+  /*
+   * Posición de la línea:
+   * columna de hora + separación
+   */
+  --line-position:
+    calc(
+      var(--time-width)
+      + var(--time-gap)
+    );
+
+  /*
+   * Posición donde empiezan los bloques:
+   * hora + separación + línea + separación
+   */
+  --content-position:
+    calc(
+      var(--line-position)
+      + var(--line-width)
+      + var(--content-gap)
+    );
+
   position: relative;
 
-  display: grid;
-  grid-template-columns: 145px 24px 1fr 40px;
-  gap: 20px;
-  align-items: center;
+  min-height: var(--timeline-height);
 
-  min-height: 120px;
-
-  border-bottom: 1px solid rgba(61, 96, 124, 0.45);
+  margin-top: 24px;
+  margin-bottom: 20px;
 }
 
-.schedule-time {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: #64809a;
-}
 
-.schedule-marker {
-  position: relative;
+/* ─────────────────────────────
+   LÍNEA VERTICAL
+   ───────────────────────────── */
 
-  display: flex;
-  justify-content: center;
-  align-self: stretch;
-}
-
-.schedule-marker::before {
+.timeline::before {
   content: '';
 
   position: absolute;
+
   top: 0;
   bottom: 0;
+  left: var(--line-position);
 
-  width: 1px;
+  width: var(--line-width);
 
   background: #294965;
 }
 
-.schedule-marker span {
-  position: relative;
-  z-index: 1;
 
-  width: 9px;
-  height: 9px;
+/* ─────────────────────────────
+   HORAS
+   ───────────────────────────── */
 
-  margin-top: 55px;
+.timeline-hour {
+  position: absolute;
 
-  border: 1px solid #70a9d4;
-  background: #07111f;
+  left: 0;
+  right: 0;
 
-  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+
+  height: 1px;
+
+  z-index: 0;
 }
 
-.schedule-content {
-  padding: 24px 0;
-}
+.timeline-hour span {
+  width: var(--time-width);
 
-.schedule-label {
-  margin-bottom: 7px;
+  flex-shrink: 0;
 
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-}
-
-.schedule-content h2 {
-  margin: 0;
-
-  font-size: 21px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+
+  text-align: right;
+
+  color: #8da8c0;
 }
 
-.schedule-index {
-  align-self: start;
-  padding-top: 25px;
+.timeline-hour div {
+  position: absolute;
+
+  left: var(--line-position);
+  right: 0;
+
+  height: 1px;
+
+  background: rgba(91, 128, 158, 0.32);
+
+  z-index: 0;
+}
+
+
+/* ─────────────────────────────
+   BLOQUES
+   ───────────────────────────── */
+
+.timeline-block {
+  position: absolute;
+
+  left: var(--content-position);
+  right: 0;
+
+  display: flex;
+  align-items: stretch;
+
+  min-height: 60px;
+
+  border: 1px solid #355b78;
+  background: rgba(10, 30, 49, 0.92);
+
+  overflow: hidden;
+
+  z-index: 1;
+}
+
+.timeline-block-line {
+  width: 4px;
+
+  flex-shrink: 0;
+
+  background: #6ca9d8;
+}
+
+.timeline-block-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 12px 20px;
+}
+
+.timeline-block-label {
+  margin-bottom: 5px;
 
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: #3e5b73;
-}
+  font-weight: 500;
+  letter-spacing: 0.15em;
 
-.schedule-item--work .schedule-label {
   color: #6ca9d8;
 }
 
-.schedule-item--study .schedule-label {
+.timeline-block h2 {
+  margin: 0;
+
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+
+  color: #d9e9ff;
+}
+
+.timeline-block-time {
+  margin-top: 6px;
+
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+
+  color: #8da8c0;
+}
+
+.timeline-block-index {
+  position: absolute;
+
+  top: 11px;
+  right: 14px;
+
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+
+  color: #5d7891;
+}
+
+
+/* ─────────────────────────────
+   COLORES POR TIPO
+   ───────────────────────────── */
+
+.timeline-block--study {
+  border-color: #64558a;
+}
+
+.timeline-block--study .timeline-block-line {
+  background: #a48ad8;
+}
+
+.timeline-block--study .timeline-block-label {
   color: #a48ad8;
 }
 
-.schedule-item--renfe .schedule-label {
+.timeline-block--ia {
+  border-color: #64558a;
+}
+
+.timeline-block--ia .timeline-block-line {
+  background: #a48ad8;
+}
+
+.timeline-block--ia .timeline-block-label {
+  color: #a48ad8;
+}
+
+.timeline-block--renfe {
+  border-color: #477f78;
+}
+
+.timeline-block--renfe .timeline-block-line {
+  background: #64c0b1;
+}
+
+.timeline-block--renfe .timeline-block-label {
   color: #64c0b1;
 }
 
-.schedule-item--study .schedule-marker span {
-  border-color: #a48ad8;
+.empty-day {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  min-height: 150px;
+  padding: 30px 0;
 }
 
-.schedule-item--renfe .schedule-marker span {
-  border-color: #64c0b1;
+.empty-day-mark {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid #294965;
+
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+
+  color: #55728c;
+}
+
+.empty-day-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.empty-day-content strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+
+  color: #66809d;
+}
+
+.empty-day-content span {
+  font-size: 13px;
+  color: #435d74;
 }
 
 .day-footer {
@@ -350,42 +509,34 @@ h1 {
 }
 
 @media (max-width: 700px) {
-  .blueprint {
-    padding: 16px;
+  .timeline {
+    --time-width: 48px;
+    --time-gap: 20px;
+    --content-gap: 14px;
   }
 
-  .day-card {
-    padding: 28px 20px;
+  .timeline-hour span {
+    font-size: 11px;
   }
 
-  .topbar-info {
-    display: none;
+  .timeline-block-content {
+    padding: 10px 14px;
   }
 
-  .day-header {
-    display: block;
+  .timeline-block h2 {
+    font-size: 18px;
   }
 
-  .day-navigation {
-    justify-content: space-between;
-    margin-top: 30px;
+  .timeline-block-label {
+    font-size: 9px;
   }
 
-  .schedule-item {
-    grid-template-columns: 90px 18px 1fr;
-    gap: 10px;
-  }
-
-  .schedule-index {
-    display: none;
-  }
-
-  .schedule-content h2 {
-    font-size: 17px;
-  }
-
-  .schedule-time {
+  .timeline-block-time {
     font-size: 10px;
+  }
+
+  .timeline-block-index {
+    display: none;
   }
 }
 
