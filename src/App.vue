@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import { schedule } from './data/schedule'
 
 const scheduleData = reactive(schedule)
@@ -399,7 +399,36 @@ function toggleBlock(blockId) {
   }
 
   block.completed = !block.completed
+
+  saveSchedule()
 }
+
+function saveSchedule() {
+  localStorage.setItem(
+    'horarioapp-schedule',
+    JSON.stringify(scheduleData)
+  )
+}
+
+function loadSchedule() {
+  const savedSchedule = localStorage.getItem(
+    'horarioapp-schedule'
+  )
+
+  if (!savedSchedule) {
+    return
+  }
+
+  const parsedSchedule = JSON.parse(savedSchedule)
+
+  Object.keys(parsedSchedule).forEach(date => {
+    scheduleData[date] = parsedSchedule[date]
+  })
+}
+
+onMounted(() => {
+  loadSchedule()
+})
 
 </script>
 
@@ -486,9 +515,9 @@ function toggleBlock(blockId) {
             )?.completed
           }
         ]" :style="{
-    top: `${getTimelinePosition(item.timelineStart)}px`,
-    height: `${getBlockHeight(item)}px`
-  }" @click="toggleBlock(item.id)">
+          top: `${getTimelinePosition(item.timelineStart)}px`,
+          height: `${getBlockHeight(item)}px`
+        }" @click="toggleBlock(item.id)">
           <div class="timeline-block-line"></div>
 
           <div class="timeline-block-content">
