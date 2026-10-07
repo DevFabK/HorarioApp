@@ -345,6 +345,20 @@ h1 {
   overflow: hidden;
 
   z-index: 1;
+
+  cursor: pointer;
+}
+
+.timeline-block--completed {
+  opacity: 0.45;
+}
+
+.timeline-block--completed h2 {
+  text-decoration: line-through;
+}
+
+.timeline-block--completed .timeline-block-line {
+  opacity: 0.5;
 }
 
 .timeline-block-line {

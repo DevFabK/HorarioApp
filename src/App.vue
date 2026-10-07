@@ -1,6 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { schedule } from './data/schedule'
+
+const scheduleData = reactive(schedule)
 
 /**
  * Fecha que estamos mostrando actualmente.
@@ -91,7 +93,7 @@ const currentDay = computed(() => {
  * un día libre sin bloques programados.
  */
 const currentDayData = computed(() => {
-  return schedule[currentDate.value] || {
+  return scheduleData[currentDate.value] || {
     status: 'free',
     blocks: []
   }
@@ -196,7 +198,8 @@ const timelineBlocks = computed(() => {
     .map(block => ({
       ...block,
       timelineStart: timeToMinutes(block.start),
-      timelineEnd: timeToMinutes(block.end)
+      timelineEnd: timeToMinutes(block.end),
+      originalBlock: block
     }))
     .sort((a, b) => a.timelineStart - b.timelineStart)
 
@@ -247,7 +250,8 @@ const timelineBlocks = computed(() => {
           start: minutesToTime(startTime),
           end: minutesToTime(endTime),
           timelineStart: startTime,
-          timelineEnd: endTime
+          timelineEnd: endTime,
+          originalBlock: block
         })
 
         currentTime = endTime
@@ -384,6 +388,19 @@ function changeDay(amount) {
 
   currentDate.value = `${newYear}-${newMonth}-${newDay}`
 }
+
+function toggleBlock(blockId) {
+  const block = currentDayData.value.blocks.find(
+    item => item.id === blockId
+  )
+
+  if (!block) {
+    return
+  }
+
+  block.completed = !block.completed
+}
+
 </script>
 
 <template>
@@ -461,11 +478,17 @@ function changeDay(amount) {
           <div></div>
         </div>
 
-        <article v-for="(item, index) in timelineBlocks" :key="item.id" class="timeline-block"
-          :class="`timeline-block--${item.category || item.type}`" :style="{
-            top: `${getTimelinePosition(item.timelineStart)}px`,
-            height: `${getBlockHeight(item)}px`
-          }">
+        <article v-for="(item, index) in timelineBlocks" :key="item.id" class="timeline-block" :class="[
+          `timeline-block--${item.category || item.type}`,
+          {
+            'timeline-block--completed': currentDayData.blocks.find(
+              block => block.id === item.id
+            )?.completed
+          }
+        ]" :style="{
+          top: `${getTimelinePosition(item.timelineStart)}px`,
+          height: `${getBlockHeight(item)}px`
+        }" @click="toggleBlock(item.id)">
 
           <div class="timeline-block-line"></div>
 
