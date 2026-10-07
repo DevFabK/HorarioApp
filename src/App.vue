@@ -2,8 +2,17 @@
 import { computed, ref } from 'vue'
 import { schedule } from './data/schedule'
 
+/**
+ * Fecha que estamos mostrando actualmente.
+ *
+ * Se mantiene en formato YYYY-MM-DD para poder utilizarla
+ * directamente como clave dentro del horario.
+ */
 const currentDate = ref('2026-10-08')
 
+/**
+ * Nombres de los días de la semana.
+ */
 const dayNames = [
   'DOMINGO',
   'LUNES',
@@ -14,6 +23,9 @@ const dayNames = [
   'SÁBADO'
 ]
 
+/**
+ * Nombres de los meses del año.
+ */
 const monthNames = [
   'ENERO',
   'FEBRERO',
@@ -29,8 +41,19 @@ const monthNames = [
   'DICIEMBRE'
 ]
 
+/**
+ * Fecha utilizada como referencia para determinar
+ * qué día se considera "hoy".
+ *
+ * Más adelante se obtendrá automáticamente del sistema.
+ */
 const today = '2026-10-08'
 
+/**
+ * Obtiene la información básica del día que estamos visualizando.
+ *
+ * Devuelve el nombre del día, número, mes y año.
+ */
 const currentDay = computed(() => {
   const [year, month, day] = currentDate.value.split('-')
 
@@ -48,6 +71,12 @@ const currentDay = computed(() => {
   }
 })
 
+/**
+ * Obtiene todos los datos del día seleccionado.
+ *
+ * Si no existe información para esa fecha, se considera
+ * un día libre sin bloques programados.
+ */
 const currentDayData = computed(() => {
   return schedule[currentDate.value] || {
     status: 'free',
@@ -55,18 +84,99 @@ const currentDayData = computed(() => {
   }
 })
 
+/**
+ * Obtiene los bloques planificados para el día seleccionado.
+ */
 const daySchedule = computed(() => {
   return currentDayData.value.blocks
 })
 
+/**
+ * Obtiene el número del día que estamos visualizando.
+ */
 const dayNumber = computed(() => {
   return currentDay.value.date
 })
 
+/**
+ * Comprueba si el día seleccionado coincide con el día actual.
+ */
 const isToday = computed(() => {
   return currentDate.value === today
 })
 
+/**
+ * Convierte una hora en formato HH:MM a minutos.
+ *
+ * Por ejemplo:
+ * 10:30 → 630 minutos.
+ *
+ * Esto nos permitirá realizar cálculos de tiempo
+ * sin depender directamente del formato de la hora.
+ *
+ * @param {string} time - Hora en formato HH:MM.
+ * @returns {number} Hora convertida a minutos.
+ */
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number)
+
+  return hours * 60 + minutes
+}
+
+/**
+ * Calcula la duración de un bloque que tiene una hora
+ * de inicio y una hora de finalización.
+ *
+ * @param {string} start - Hora de inicio en formato HH:MM.
+ * @param {string} end - Hora de finalización en formato HH:MM.
+ * @returns {number} Duración del bloque en minutos.
+ */
+function getBlockDuration(start, end) {
+  return timeToMinutes(end) - timeToMinutes(start)
+}
+
+/**
+ * Obtiene la duración de cualquier bloque.
+ *
+ * Los bloques de trabajo tienen start y end.
+ * Los bloques de estudio tienen directamente duration.
+ *
+ * @param {Object} block - Bloque del horario.
+ * @returns {number} Duración del bloque en minutos.
+ */
+function getDuration(block) {
+  if (block.duration) {
+    return block.duration
+  }
+
+  return getBlockDuration(block.start, block.end)
+}
+
+/**
+ * Obtiene la etiqueta que se mostrará encima
+ * del nombre del bloque.
+ *
+ * @param {Object} block - Bloque del horario.
+ * @returns {string} Etiqueta del bloque.
+ */
+function getBlockLabel(block) {
+  if (block.category === 'ia') {
+    return 'IA & BIG DATA'
+  }
+
+  if (block.category === 'renfe') {
+    return 'RENFE'
+  }
+
+  return 'TRABAJO'
+}
+
+/**
+ * Cambia el día que estamos visualizando.
+ *
+ * @param {number} amount - Número de días que queremos
+ * avanzar o retroceder.
+ */
 function changeDay(amount) {
   const [year, month, day] = currentDate.value.split('-')
 
@@ -168,7 +278,13 @@ function changeDay(amount) {
         >
 
           <div class="schedule-time">
-            {{ item.start }} — {{ item.end }}
+            <template v-if="item.start && item.end">
+              {{ item.start }} — {{ item.end }}
+            </template>
+
+            <template v-else>
+              {{ Math.floor(item.duration / 60) }}H
+            </template>
           </div>
 
           <div class="schedule-marker">
@@ -178,13 +294,7 @@ function changeDay(amount) {
           <div class="schedule-content">
 
             <div class="schedule-label">
-              {{
-                item.category === 'ia'
-                  ? 'IA & BIG DATA'
-                  : item.category === 'renfe'
-                    ? 'RENFE'
-                    : 'TRABAJO'
-              }}
+              {{ getBlockLabel(item) }}
             </div>
 
             <h2>{{ item.title }}</h2>

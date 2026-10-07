@@ -1,3 +1,17 @@
+/**
+ * Horario planificado para octubre de 2026.
+ *
+ * Cada fecha contiene:
+ * - status: indica si es un día de trabajo o libre.
+ * - blocks: bloques planificados para ese día.
+ *
+ * Los bloques de trabajo tienen una hora concreta porque
+ * conocemos el horario laboral.
+ *
+ * Los bloques de estudio solamente indican su duración.
+ * La aplicación decidirá posteriormente cómo colocarlos
+ * dentro del día.
+ */
 export const schedule = {
   '2026-10-01': {
     status: 'free',
@@ -6,8 +20,7 @@ export const schedule = {
         id: 'study-ia-2026-10-01',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -16,8 +29,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-01',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -32,8 +44,7 @@ export const schedule = {
         id: 'study-ia-2026-10-02',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -42,8 +53,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-02',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -67,8 +77,7 @@ export const schedule = {
         id: 'study-ia-2026-10-03',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -92,8 +101,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-04',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -114,12 +122,11 @@ export const schedule = {
         original: true
       },
       {
-        id: 'study-ia-2026-10-05',
+        id: 'study-renfe-2026-10-05',
         type: 'study',
-        category: 'ia',
-        start: '18:00',
-        end: '19:00',
-        title: 'IA & Big Data',
+        category: 'renfe',
+        duration: 60,
+        title: 'Renfe',
         completed: false,
         original: true
       }
@@ -133,8 +140,7 @@ export const schedule = {
         id: 'study-ia-2026-10-06',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -143,8 +149,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-06',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -159,8 +164,7 @@ export const schedule = {
         id: 'study-ia-2026-10-07',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -169,8 +173,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-07',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -185,8 +188,7 @@ export const schedule = {
         id: 'study-ia-2026-10-08',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -195,8 +197,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-08',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -220,8 +221,7 @@ export const schedule = {
         id: 'study-ia-2026-10-09',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -245,8 +245,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-10',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -267,12 +266,11 @@ export const schedule = {
         original: true
       },
       {
-        id: 'study-ia-2026-10-11',
+        id: 'study-renfe-2026-10-11',
         type: 'study',
-        category: 'ia',
-        start: '18:00',
-        end: '19:00',
-        title: 'IA & Big Data',
+        category: 'renfe',
+        duration: 60,
+        title: 'Renfe',
         completed: false,
         original: true
       }
@@ -286,8 +284,7 @@ export const schedule = {
         id: 'study-ia-2026-10-12',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -296,8 +293,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-12',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -312,8 +308,7 @@ export const schedule = {
         id: 'study-ia-2026-10-13',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -322,8 +317,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-13',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -338,8 +332,7 @@ export const schedule = {
         id: 'study-ia-2026-10-14',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -348,8 +341,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-14',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -373,8 +365,7 @@ export const schedule = {
         id: 'study-ia-2026-10-15',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -398,8 +389,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-16',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -423,8 +413,7 @@ export const schedule = {
         id: 'study-ia-2026-10-17',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -448,8 +437,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-18',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -464,8 +452,7 @@ export const schedule = {
         id: 'study-ia-2026-10-19',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -474,8 +461,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-19',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -490,8 +476,7 @@ export const schedule = {
         id: 'study-ia-2026-10-20',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -500,8 +485,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-20',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -525,8 +509,7 @@ export const schedule = {
         id: 'study-ia-2026-10-21',
         type: 'study',
         category: 'ia',
-        start: '15:40',
-        end: '16:40',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -550,8 +533,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-22',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -575,8 +557,7 @@ export const schedule = {
         id: 'study-ia-2026-10-23',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -600,8 +581,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-24',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -616,8 +596,7 @@ export const schedule = {
         id: 'study-ia-2026-10-25',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -626,8 +605,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-25',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -642,8 +620,7 @@ export const schedule = {
         id: 'study-ia-2026-10-26',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -652,8 +629,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-26',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -677,8 +653,7 @@ export const schedule = {
         id: 'study-ia-2026-10-27',
         type: 'study',
         category: 'ia',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -702,8 +677,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-28',
         type: 'study',
         category: 'renfe',
-        start: '18:00',
-        end: '19:00',
+        duration: 60,
         title: 'Renfe',
         completed: false,
         original: true
@@ -724,12 +698,11 @@ export const schedule = {
         original: true
       },
       {
-        id: 'study-ia-2026-10-29',
+        id: 'study-renfe-2026-10-29',
         type: 'study',
-        category: 'ia',
-        start: '18:00',
-        end: '19:00',
-        title: 'IA & Big Data',
+        category: 'renfe',
+        duration: 60,
+        title: 'Renfe',
         completed: false,
         original: true
       }
@@ -743,8 +716,7 @@ export const schedule = {
         id: 'study-ia-2026-10-30',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -753,8 +725,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-30',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
@@ -769,8 +740,7 @@ export const schedule = {
         id: 'study-ia-2026-10-31',
         type: 'study',
         category: 'ia',
-        start: '10:00',
-        end: '12:00',
+        duration: 120,
         title: 'IA & Big Data',
         completed: false,
         original: true
@@ -779,8 +749,7 @@ export const schedule = {
         id: 'study-renfe-2026-10-31',
         type: 'study',
         category: 'renfe',
-        start: '12:00',
-        end: '14:00',
+        duration: 120,
         title: 'Renfe',
         completed: false,
         original: true
