@@ -5,6 +5,17 @@ import { schedule } from './data/schedule'
 const scheduleData = reactive(schedule)
 
 /**
+ * Estado temporal del bloque que se está arrastrando.
+ */
+const dragState = ref(null)
+
+/**
+ * Indica si el último movimiento del puntero
+ * fue suficientemente grande como para considerarlo un drag.
+ */
+const isDragging = ref(false)
+
+/**
  * Fecha que estamos mostrando actualmente.
  *
  * Se mantiene en formato YYYY-MM-DD para poder utilizarla
@@ -57,6 +68,14 @@ const today = '2026-10-08'
  * 1 hora = 70 píxeles.
  */
 const pixelsPerHour = 70
+
+/**
+ * Resolución mínima para colocar bloques en la timeline.
+ *
+ * Aunque visualmente solo mostramos las horas completas,
+ * las tareas pueden comenzar cada 30 minutos.
+ */
+const timelineStepMinutes = 30
 
 /**
  * Hora habitual de inicio del día.
@@ -183,16 +202,50 @@ function getBlockLabel(block) {
 }
 
 /**
+ * Busca el primer hueco disponible para un bloque flexible.
+ *
+ * @param {number} duration - Duración del bloque en minutos.
+ * @param {number} preferredStart - Hora desde la que queremos buscar.
+ * @param {Array} occupiedBlocks - Bloques que ya ocupan espacio.
+ * @returns {number} Hora de inicio disponible.
+ */
+function findAvailableStart(duration, preferredStart, occupiedBlocks) {
+  let startTime = preferredStart
+
+  while (true) {
+    const endTime = startTime + duration
+
+    const conflictingBlock = occupiedBlocks.find(
+      block =>
+        startTime < block.timelineEnd &&
+        endTime > block.timelineStart
+    )
+
+    if (!conflictingBlock) {
+      return startTime
+    }
+
+    startTime = conflictingBlock.timelineEnd
+  }
+}
+
+/**
  * Construye los bloques de la timeline.
  *
- * Los bloques con una hora concreta se consideran fijos.
- * Los bloques que solamente tienen duración se colocan
- * automáticamente a partir de la hora habitual de inicio
- * del día.
+ * Los bloques de trabajo tienen start y end.
+ *
+ * Los bloques flexibles tienen duration.
+ *
+ * Si un bloque flexible tiene start, se respeta esa posición.
+ * Si no tiene start, se coloca automáticamente en el primer
+ * hueco disponible.
  */
 const timelineBlocks = computed(() => {
   const blocks = currentDayData.value.blocks
 
+  /**
+   * Bloques con horario fijo.
+   */
   const fixedBlocks = blocks
     .filter(block => block.start && block.end)
     .map(block => ({
@@ -203,63 +256,90 @@ const timelineBlocks = computed(() => {
     }))
     .sort((a, b) => a.timelineStart - b.timelineStart)
 
-  const flexibleBlocks = blocks.filter(
-    block => !block.start && block.duration
+  /**
+   * Bloques flexibles que ya tienen una posición.
+   *
+   * Esto ocurrirá cuando el usuario haya movido una tarea
+   * mediante drag & drop.
+   */
+  const positionedFlexibleBlocks = blocks
+    .filter(
+      block =>
+        block.duration &&
+        block.start &&
+        !block.end
+    )
+    .map(block => {
+      const timelineStart = timeToMinutes(block.start)
+      const timelineEnd = timelineStart + block.duration
+
+      return {
+        ...block,
+        end: minutesToTime(timelineEnd),
+        timelineStart,
+        timelineEnd,
+        originalBlock: block
+      }
+    })
+
+  /**
+   * Bloques flexibles que todavía no tienen una posición.
+   */
+  const unpositionedFlexibleBlocks = blocks.filter(
+    block =>
+      block.duration &&
+      !block.start
   )
 
-  /*
-   * Normalmente empezamos a las 09:00.
+  /**
+   * Todos los bloques que ya ocupan una posición.
+   */
+  const placedBlocks = [
+    ...fixedBlocks,
+    ...positionedFlexibleBlocks
+  ]
+
+  /**
+   * Empezamos normalmente a las 09:00.
    *
-   * Si existe un bloque fijo antes de esa hora,
-   * la timeline empezará antes para poder mostrarlo.
+   * Si existe un bloque anterior, adaptamos el comienzo
+   * para poder mostrarlo correctamente.
    */
   let currentTime = defaultDayStart
 
-  if (fixedBlocks.length > 0) {
-    const firstFixedBlock = fixedBlocks[0]
+  if (placedBlocks.length > 0) {
+    const firstBlock = Math.min(
+      ...placedBlocks.map(block => block.timelineStart)
+    )
 
-    if (firstFixedBlock.timelineStart < currentTime) {
-      currentTime = firstFixedBlock.timelineStart
+    if (firstBlock < currentTime) {
+      currentTime = firstBlock
     }
   }
 
-  const placedBlocks = [...fixedBlocks]
+  /**
+   * Colocamos automáticamente los bloques que todavía
+   * no tienen una hora asignada.
+   */
+  for (const block of unpositionedFlexibleBlocks) {
+    const startTime = findAvailableStart(
+      block.duration,
+      currentTime,
+      placedBlocks
+    )
 
-  for (const block of flexibleBlocks) {
-    let startTime = currentTime
+    const endTime = startTime + block.duration
 
-    /*
-     * Buscamos el primer hueco disponible para el bloque.
-     */
-    let foundPosition = false
+    placedBlocks.push({
+      ...block,
+      start: minutesToTime(startTime),
+      end: minutesToTime(endTime),
+      timelineStart: startTime,
+      timelineEnd: endTime,
+      originalBlock: block
+    })
 
-    while (!foundPosition) {
-      const endTime = startTime + block.duration
-
-      const conflictingBlock = fixedBlocks.find(
-        fixedBlock =>
-          startTime < fixedBlock.timelineEnd &&
-          endTime > fixedBlock.timelineStart
-      )
-
-      if (!conflictingBlock) {
-        foundPosition = true
-
-        placedBlocks.push({
-          ...block,
-          start: minutesToTime(startTime),
-          end: minutesToTime(endTime),
-          timelineStart: startTime,
-          timelineEnd: endTime,
-          originalBlock: block
-        })
-
-        currentTime = endTime
-      } else {
-        startTime = conflictingBlock.timelineEnd
-        currentTime = startTime
-      }
-    }
+    currentTime = endTime
   }
 
   return placedBlocks.sort(
@@ -426,6 +506,100 @@ function loadSchedule() {
   })
 }
 
+/**
+ * Inicia el arrastre de un bloque flexible.
+ *
+ * Los bloques fijos, como Trabajo, no pueden moverse.
+ */
+function startDrag(event, item) {
+  if (item.type === 'work') {
+    return
+  }
+
+  if (!item.duration) {
+    return
+  }
+
+  const block = currentDayData.value.blocks.find(
+    currentBlock => currentBlock.id === item.id
+  )
+
+  if (!block) {
+    return
+  }
+
+  dragState.value = {
+    blockId: item.id,
+    pointerStartY: event.clientY,
+    originalStart: item.timelineStart
+  }
+
+  isDragging.value = false
+
+  event.currentTarget.setPointerCapture(event.pointerId)
+}
+
+/**
+ * Actualiza la posición del bloque mientras se arrastra.
+ *
+ * La posición se ajusta automáticamente a intervalos
+ * de 30 minutos.
+ */
+function dragBlock(event, item) {
+  if (!dragState.value) {
+    return
+  }
+
+  const deltaY = event.clientY - dragState.value.pointerStartY
+
+  /*
+   * Evitamos interpretar un pequeño movimiento como drag.
+   */
+  if (!isDragging.value && Math.abs(deltaY) < 5) {
+    return
+  }
+
+  isDragging.value = true
+
+  const deltaMinutes =
+    (deltaY / pixelsPerHour) * 60
+
+  const rawStart =
+    dragState.value.originalStart + deltaMinutes
+
+  const snappedStart =
+    Math.round(rawStart / timelineStepMinutes) *
+    timelineStepMinutes
+
+  const block = currentDayData.value.blocks.find(
+    currentBlock =>
+      currentBlock.id === dragState.value.blockId
+  )
+
+  if (!block) {
+    return
+  }
+
+  block.start = minutesToTime(
+    Math.max(0, snappedStart)
+  )
+}
+
+/**
+ * Finaliza el arrastre del bloque.
+ */
+function endDrag(event) {
+  if (!dragState.value) {
+    return
+  }
+
+  if (isDragging.value) {
+    saveSchedule()
+  }
+
+  dragState.value = null
+}
+
 onMounted(() => {
   loadSchedule()
 })
@@ -512,12 +686,15 @@ onMounted(() => {
           {
             'timeline-block--completed': currentDayData.blocks.find(
               block => block.id === item.id
-            )?.completed
+            )?.completed,
+            'timeline-block--dragging':
+              dragState?.blockId === item.id && isDragging
           }
         ]" :style="{
-          top: `${getTimelinePosition(item.timelineStart)}px`,
-          height: `${getBlockHeight(item)}px`
-        }" @click="toggleBlock(item.id)">
+    top: `${getTimelinePosition(item.timelineStart)}px`,
+    height: `${getBlockHeight(item)}px`
+  }" @pointerdown="startDrag($event, item)" @pointermove="dragBlock($event, item)" @pointerup="endDrag($event)"
+          @pointercancel="endDrag($event)" @click="!isDragging && toggleBlock(item.id)">
           <div class="timeline-block-line"></div>
 
           <div class="timeline-block-content">
