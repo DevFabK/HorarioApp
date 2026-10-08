@@ -438,6 +438,41 @@ h1 {
   color: #5d7891;
 }
 
+.timeline-block-handle {
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  flex-shrink: 0;
+
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -3px;
+  color: #bcd9f2;
+
+  background: rgba(108, 169, 216, 0.14);
+  border-right: 1px solid rgba(108, 169, 216, 0.35);
+
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.timeline-block-handle:hover {
+  color: #ffffff;
+  background: rgba(108, 169, 216, 0.3);
+}
+
+.timeline-block--dragging .timeline-block-handle {
+  cursor: grabbing;
+  color: #ffffff;
+  background: rgba(108, 169, 216, 0.4);
+}
 
 /* ─────────────────────────────
    COLORES POR TIPO
@@ -477,6 +512,19 @@ h1 {
 
 .timeline-block--renfe .timeline-block-label {
   color: #64c0b1;
+}
+
+.timeline-block--ia .timeline-block-handle,
+.timeline-block--study .timeline-block-handle {
+  color: #d4c4f5;
+  background: rgba(164, 138, 216, 0.16);
+  border-right-color: rgba(164, 138, 216, 0.4);
+}
+
+.timeline-block--renfe .timeline-block-handle {
+  color: #a9ece0;
+  background: rgba(100, 192, 177, 0.16);
+  border-right-color: rgba(100, 192, 177, 0.4);
 }
 
 .empty-day {

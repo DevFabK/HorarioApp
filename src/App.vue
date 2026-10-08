@@ -560,6 +560,7 @@ function dragBlock(event, item) {
   }
 
   isDragging.value = true
+  window.getSelection()?.removeAllRanges()
 
   const deltaMinutes =
     (deltaY / pixelsPerHour) * 60
@@ -598,6 +599,37 @@ function endDrag(event) {
   }
 
   dragState.value = null
+
+  // Esperamos un instante para que el click que dispara el navegador
+  // al soltar el puntero siga viendo isDragging = true y se ignore.
+  setTimeout(() => {
+    isDragging.value = false
+  }, 0)
+}
+
+/**
+ * Marca el bloque como completado al hacer click,
+ * salvo que sea el final de un drag o de una selección de texto.
+ */
+function handleBlockClick(item) {
+  if (isDragging.value) {
+    return
+  }
+
+  const selection = window.getSelection()
+
+  if (selection && selection.toString().length > 0) {
+    return
+  }
+
+  toggleBlock(item.id)
+}
+
+/**
+ * Indica si un bloque se puede mover (los de trabajo no).
+ */
+function isDraggable(item) {
+  return item.type !== 'work' && Boolean(item.duration)
 }
 
 onMounted(() => {
@@ -693,9 +725,14 @@ onMounted(() => {
         ]" :style="{
     top: `${getTimelinePosition(item.timelineStart)}px`,
     height: `${getBlockHeight(item)}px`
-  }" @pointerdown="startDrag($event, item)" @pointermove="dragBlock($event, item)" @pointerup="endDrag($event)"
-          @pointercancel="endDrag($event)" @click="!isDragging && toggleBlock(item.id)">
+  }" @click="handleBlockClick(item)">
           <div class="timeline-block-line"></div>
+
+          <div v-if="isDraggable(item)" class="timeline-block-handle" @pointerdown="startDrag($event, item)"
+            @pointermove="dragBlock($event, item)" @pointerup="endDrag($event)" @pointercancel="endDrag($event)"
+            @click.stop>
+            ⋮⋮
+          </div>
 
           <div class="timeline-block-content">
             <span class="timeline-block-label">
